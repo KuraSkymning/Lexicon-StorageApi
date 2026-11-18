@@ -13,20 +13,47 @@ public class ProductsController : ControllerBase
         _context = context;
     }
 
-    // GET: api/Product
+    // GET: api/products?category=KategoriNamn&name=Namn
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ProductDTO>>> GetProduct()
+    public async Task<ActionResult<List<ProductDTO>>> GetProduct(
+        [FromQuery] string category = "",
+        [FromQuery] string name = "")
     {
-        return await _context.Product.Select(p => new ProductDTO
-        {
-            Id = p.Id,
-            Name = p.Name,
-            Price = p.Price,
-            Count = p.Count
-        }).ToListAsync();
+        return await _context.Product.Where(p =>
+            (category.Length == 0 || p.Category == category) &&
+            (name.Length == 0 || p.Name == name)).Select(p => new ProductDTO
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Price = p.Price,
+                Count = p.Count
+            }).ToListAsync();
     }
 
-    // GET: api/Product/5
+    // GET: api/products/stats
+    [HttpGet("stats")]
+    public async Task<ActionResult<ProductStatsDTO>> GetProductStats()
+    {
+        List<Product> products = await _context.Product.ToListAsync();
+        if (products.Count == 0)
+        {
+            return new ProductStatsDTO
+            {
+                NumberOfProducts = 0,
+                TotalValue = 0,
+                AveragePrice = 0
+            };
+        }
+
+        return new ProductStatsDTO
+        {
+            NumberOfProducts = products.Count,
+            TotalValue = products.Sum(p => p.Price * p.Count),
+            AveragePrice = products.Average(p => p.Price)
+        };
+    }
+
+    // GET: api/products/5
     [HttpGet("{id}")]
     public async Task<ActionResult<ProductDTO>> GetProduct(int id)
     {
@@ -45,7 +72,7 @@ public class ProductsController : ControllerBase
         };
     }
 
-    // PUT: api/Product/5
+    // PUT: api/products/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
     public async Task<IActionResult> PutProduct(int? id, CreateProductDTO product)
@@ -86,7 +113,7 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 
-    // POST: api/Product
+    // POST: api/products
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
     public async Task<ActionResult<ProductDTO>> PostProduct(CreateProductDTO product)
@@ -113,7 +140,7 @@ public class ProductsController : ControllerBase
             });
     }
 
-    // DELETE: api/Product/5
+    // DELETE: api/products/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteProduct(int? id)
     {

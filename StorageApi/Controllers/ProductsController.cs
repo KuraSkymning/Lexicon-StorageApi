@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using StorageApi.DTOs;
 using StorageApi.Models;
 
 [Route("api/[controller]")]
@@ -14,36 +15,57 @@ public class ProductsController : ControllerBase
 
     // GET: api/Product
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Product>>> GetProduct()
+    public async Task<ActionResult<IEnumerable<ProductDTO>>> GetProduct()
     {
-        return await _context.Product.ToListAsync();
+        return await _context.Product.Select(p => new ProductDTO
+        {
+            Id = p.Id,
+            Name = p.Name,
+            Price = p.Price,
+            Count = p.Count
+        }).ToListAsync();
     }
 
     // GET: api/Product/5
     [HttpGet("{id}")]
-    public async Task<ActionResult<Product>> GetProduct(int id)
+    public async Task<ActionResult<ProductDTO>> GetProduct(int id)
     {
         var product = await _context.Product.FindAsync(id);
-
         if (product == null)
         {
             return NotFound();
         }
 
-        return product;
+        return new ProductDTO
+        {
+            Id = product.Id,
+            Name = product.Name,
+            Price = product.Price,
+            Count = product.Count
+        };
     }
 
     // PUT: api/Product/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutProduct(int? id, Product product)
+    public async Task<IActionResult> PutProduct(int? id, CreateProductDTO product)
     {
-        if (id != product.Id)
+        if (id == null)
         {
             return BadRequest();
         }
 
-        _context.Entry(product).State = EntityState.Modified;
+        Product p = new()
+        {
+            Id = (int)id,
+            Name = product.Name,
+            Price = product.Price,
+            Category = product.Category,
+            Shelf = product.Shelf,
+            Count = product.Count,
+            Description = product.Description
+        };
+        _context.Entry(p).State = EntityState.Modified;
 
         try
         {
@@ -67,12 +89,28 @@ public class ProductsController : ControllerBase
     // POST: api/Product
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<Product>> PostProduct(Product product)
+    public async Task<ActionResult<ProductDTO>> PostProduct(CreateProductDTO product)
     {
-        _context.Product.Add(product);
+        Product p = new()
+        {
+            Name = product.Name,
+            Price = product.Price,
+            Category = product.Category,
+            Shelf = product.Shelf,
+            Count = product.Count,
+            Description = product.Description
+        };
+        _context.Product.Add(p);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction("GetProduct", new { id = product.Id }, product);
+        return CreatedAtAction("GetProduct", new { id = p.Id },
+            new ProductDTO
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Price = p.Price,
+                Count = p.Count
+            });
     }
 
     // DELETE: api/Product/5

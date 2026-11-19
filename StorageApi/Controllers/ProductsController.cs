@@ -40,7 +40,7 @@ public class ProductsController : ControllerBase
             return new ProductStatsDTO
             {
                 NumberOfProducts = 0,
-                TotalValue = 0,
+                TotalInventoryValue = 0,
                 AveragePrice = 0
             };
         }
@@ -48,8 +48,8 @@ public class ProductsController : ControllerBase
         return new ProductStatsDTO
         {
             NumberOfProducts = products.Count,
-            TotalValue = products.Sum(p => p.Price * p.Count),
-            AveragePrice = products.Average(p => p.Price)
+            TotalInventoryValue = products.Sum(p => p.Price * p.Count),
+            AveragePrice = Math.Round(products.Average(p => p.Price), 2)
         };
     }
 

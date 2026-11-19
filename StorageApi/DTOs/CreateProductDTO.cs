@@ -17,8 +17,6 @@ namespace StorageApi.DTOs
         [Required(ErrorMessage = "Antal måste anges")]
         [Range(0, 10000000, ErrorMessage = "Antal måste vara inom intervallet 0 till 10000000")]
         public int Count { get; set; }
-        [Required(ErrorMessage = "Beskrivning måste anges")]
-        [MinLength(0)]
         public string Description { get; set; } = "";
     }
 }
